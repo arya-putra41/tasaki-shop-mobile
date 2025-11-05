@@ -1,5 +1,4 @@
-# Tasaki Shop
-# Misaka City's Best Football Merchandise
+# Tasaki Shop: Misaka City's Best Football Merchandise
 
 # Tugas 7: Elemen Dasar Flutter
 
@@ -51,6 +50,56 @@ Hot restart juga memberikan kode terbaru kepada VM Dart, tetapi ikut me-*restart
 ## Referensi Tugas 7
 Tim Dosen PBP. (2025). *Intro to Dart Programming and Flutter Framework*. Fakultas Ilmu Komputer Universitas Indonesia.
 
+Dokumentasi API Flutter. Google. Diakses dari https://api.flutter.dev
+
+Dokumentasi Flutter. Google. Diakses dari https://docs.flutter.dev
+
+
+# Tugas 8: Flutter Navigation & Forms
+
+## 1. Jelaskan perbedaan antara `Navigator.push()` dan `Navigator.pushReplacement()`
+`push()` dan `pushReplacement()` merupakan dua cara untuk menambahkan halaman (*route*) baru ke *stack* navigasi Flutter. Navigasi antarhalaman dalam aplikasi Flutter dilakukan lewat stack, dengan mengklik tautan akan mem-*push* halaman baru, dan kembali akan mem-*pop* stack. Aplikasi akan menampilkan halaman yang paling atas dalam stack (*peek*).
+
+**`push()`** merupakan cara navigasi yang paling sederhana, yaitu sekedar menambahkan halaman baru ke paling atas stack sehingga ditampilkan oleh aplikasi. Di sisi lain, **`pushReplacement()`** agak lebih rumit, yaitu *mengganti* halaman yang sedang ditampilkan ke user. Secara sekilas, hasil dari kedua operasi ini sama, tetapi *use case*-nya berbeda terutama ketika kita sudah memiliki aplikasi yang matang dan banyak fiturnya.
+
+Perbedaan pemanfaatan ini dapat kita pahami dengan mengamati penamaan yang digunakan pada Flutter untuk perubahan halaman, yaitu *route*. Kita dapat menggambarkan suatu aplikasi sebagai peta yang berpusat dari *homepage* dan memiliki beberapa jalan yang mengarah kepada fungsi yang berbeda, seperti berikut:
+
+```
+                    Profiles
+                       |
+                       |
+                       |
+                       |
+News ============ [Home Page] ============ Forums
+                       |
+                       |
+                       |
+                       |
+                      Shop
+```
+
+**Kita menggunakan `pushReplacement()` untuk berpindah jalan, dan kita menggunakan `push()` untuk melanjutkan perjalanan di satu rute.** Logikanya, ketika kita menelusuri rute News, kita harus bergerak secara berurutan dan sistematis di rute tersebut sehingga kita dapat mengetahui jalan pulang (ini diwujudkan dengan mendorong halaman baru ke route yang sudah ada, sehingga riwayat halaman yang dikunjungi dapat ditelusuri kembali jika kita menekan *back*). 
+
+Jika kita ingin berpindah rute dari News ke Forums, maka kita harus kembali ke homepage (titik pusat) dan memulai rute Profile dari awal. Ini diwujudkan dengan `pushReplacement()` yang menghapus rute yang sedang ditampilkan dan menggantinya dengan rute baru. Misalnya, jika kita sudah membaca beberapa artikel di News, kemudian kita pergi ke Forums dan menekan *back*, maka kita bukan akan menelusuri kembali histori membaca News kita, melainkan kembali ke homepage.
+
+## 2. Bagaimana anda memanfaatkan *hierarchy widget*?
+Widget seperti **`Scaffold`, `AppBar`, dan `Drawer`** membantu kita untuk merancang aplikasi dengan menyediakan *framework* di mana kita dapat menempatkan elemen dengan posisi dan fungsionalitas tertentu. Sebagai contoh, saat memanfaatkan AppBar, kita tidak perlu repot-repot membuat suatu widget yang menempel ke atas layar, menempatkan teks dan elemen lainnya di dalam widget tersebut, dan lain-lain; kita cukup memberikan teks atau elemen yang kita inginkan dalam bentuk argumen ke AppBar, dan jadilah fitur tersebut.
+
+Adanya widget-widget ini juga ikut membantu konsistensi aplikasi karena dapat digunakan kembali di beberapa halaman. Kita dapat membuat suatu *custom widget* (inherit StatelessWidget atau StatefulWidget) dan membuat fitur yang kita inginkan di dalam method `build()`. Artinya, setiap kali kita menciptakan *instance* dari widget tersebut, kita akan memperoleh struktur dan isi yang sama. Menggunakan widget seperti ini akan membantu bahasa desain aplikasi yang kohesif serta menonjolkan filosofi DRY (*Don't Repeat Yourself*) dalam pemrograman.
+
+## 3. Apa kelebihan menggunakan *layout widget* seperti `Padding` dan `ListView`?
+Widget-widget ini dimanfaatkan seperti CSS pada aplikasi web, yaitu untuk menentukan penempatan dan ukuran masing-masing widget pada aplikasi kita. Misalnya, Padding digunakan untuk membuat ruang tambahan di sekitar suatu widget agar widget tersebut terlihat lebih besar dan jelas. Membungkus elemen-elemen formulir kita dengan *layout widget* akan mempermudah kita dalam menyusun tampilan yang kita inginkan, alih-alih sekedar meletakkan aplikasi tersebut di dalam *body* halaman (Scaffold) kita.
+
+Sebagai contoh, dalam *form* yang kita buat, kita memanfaatkan `SingleChildScrollView()`. Dari dokumentasi Flutter, widget ini menerima satu elemen anak serta mengatur supaya anak tersebut dapat digulir (di-*scroll*) apabila terjadi *overflow*. Widget ini sangat bermanfaat untuk menampilkan elemen yang mungkin terlalu panjang atau tinggi untuk ditampilkan di beberapa perangkat (misalnya ponsel dalam mode landscape). Untuk anak dari widget tersebut, kita menggunakan `Column()`, salah satu widget layout paling sederhana yang menampilkan widget-widget anaknya secara vertikal.
+
+## 4. Bagaimana anda menyesuaikan warna tema?
+Konsistensi warna dan desain aplikasi dapat diwujudkan dengan beberapa cara:
+- Menggunakan *widget* yang sama di setiap halaman, misalnya AppBar, Drawer, dan header/footer jika ada.
+- Menggunakan tema. Kita mendefinisikan tema di `main.dart` sebelum aplikasi dimulai. Tema ini mengelola tampilan *default* untuk semua widget di aplikasi, seperti warna (color scheme), tampilan teks (font), dan *styling* untuk berbagai widget seperti tombol dan field input. Widget tema akan "membersamai" root dan menurun ke semua widget di bawahnya, sehingga dapat dipanggil dari mengatur semua widget.
+
+  Untuk memanfaatkan tema, kita dapat memanggil atribut di tema tersebut untuk digunakan di atribut widget yang sesuai. Sebagai contoh, untuk mengatur warna AppBar di tutorial, kita menggunakan `Theme.of(context).colorScheme.primary`, yaitu warna utama dari color scheme pada tema. Kita dapat menyamakan tampilan warna seluruh aplikasi dengan menggunakan warna yang cocok dari color scheme tersebut di widget-widget kita.
+
+## Referensi Tugas 8
 Dokumentasi API Flutter. Google. Diakses dari https://api.flutter.dev
 
 Dokumentasi Flutter. Google. Diakses dari https://docs.flutter.dev
