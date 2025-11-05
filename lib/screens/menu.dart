@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:tasaki_shop/widgets/drawer.dart';
+import 'package:tasaki_shop/screens/productform_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class MyHomePage extends StatelessWidget {
   MyHomePage({super.key});
@@ -16,19 +19,17 @@ class MyHomePage extends StatelessWidget {
       // AppBar adalah bagian atas halaman yang menampilkan judul.
       appBar: AppBar(
         // Judul aplikasi "Football News" dengan teks putih dan tebal.
-        title: const Text(
+        title: Text(
           'Tasaki Shop',
-          style: TextStyle(
+          style: GoogleFonts.inconsolata(
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
         ),
         // Warna latar belakang AppBar diambil dari skema warna tema aplikasi.
-        backgroundColor: Theme
-            .of(context)
-            .colorScheme
-            .primary,
+        backgroundColor: Color(0xff60a5fa),
       ),
+      drawer: AppDrawer(),
       // Body halaman dengan padding di sekelilingnya.
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -122,8 +123,14 @@ class ItemCard extends StatelessWidget {
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(
-                SnackBar(content: Text("Kamu telah menekan tombol ${item.name}!"))
+                SnackBar(content: Text("You have pressed ${item.name}!"))
             );
+          if (item.name == "Create Product") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ProductFormPage())
+            );
+          }
         },
         // Container untuk menyimpan Icon dan Text
         child: Container(
