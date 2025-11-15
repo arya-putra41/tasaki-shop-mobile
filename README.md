@@ -103,3 +103,54 @@ Konsistensi warna dan desain aplikasi dapat diwujudkan dengan beberapa cara:
 Dokumentasi API Flutter. Google. Diakses dari https://api.flutter.dev
 
 Dokumentasi Flutter. Google. Diakses dari https://docs.flutter.dev
+
+# Tugas 9
+## 1. Jelaskan bagaimana anda mengimplementasikan checklist di atas
+- **Implementasi fitur registrasi, login, dan logout** dilakukan dengan menciptakan *app* baru di aplikasi Django untuk menerima input autentikasi, menciptakan formulir login dan registrasi di aplikasi Flutter (dengan field input dan TextInputController untuk membaca input tersebut), lalu mengirimkan informasi dari formulir tersebut ke *view* Django melalui HTTP *request* POST. Dengan adanya fungsi ini, Django mampu meloginkan pengguna dari isi request POST, bukan dari AuthenticationForm. Spesifik pada fungsi registrasi, kita memuat informasi form ke bentuk JSON kemudian mengolahnya di dalam *view*.
+- **Membuat model** dilakukan dengan memasukkan bentuk JSON model Django untuk produk ke dalam app.quicktype.io, lalu menyalin kode Dart yang dihasilkan oleh *code generator*. Kode ini memiliki method untuk mengolah model menjadi JSON dan sebaliknya.
+- **Membuat halaman list produk** dilakukan dengan terlebih dahulu membuat sebuah *card* produk yang menampilkan nama, stok, harga, penjual, deskripsi, gambar *thumbnail*, kategori, dan status *featured* masing-masing produk. Kemudian, di halaman list produk, kita menggunakan widget FutureBuilder yang berfungsi membuat widget-widget pada halaman berdasarkan hasil Future yang diperoleh. Di sini, kita menggunakan FutureBuilder untuk membuat ListView, dan ListView itu sendiri memiliki builder yang melakukan iterasi terhadap list produk yang didapatkan oleh Future. Untuk menyiapkan data ini, kita membuat sebuah fungsi asinkronus yang menarik informasi JSON dari app Django kita.
+- **Filtering pada halaman list produk** dilakukan dengan mengambil data user dari request, kemudian memodifikasi fungsi async di atas agar hanya meng-output produk yang dijual oleh user tersebut. Kemudian, kita menghubungkannya ke tombol "My Products" yang ada di homepage. 
+- **Membuat halaamn detail produk** dilakukan dengan menambahkan fungsi onTap pada product card yang sudah kita buat di list produk, dengan fungsi ini membuka detail produk yang bersangkutan (menggunakan snapshot karena diambil dari future). Kemudian, kita cukup mendesain halaman detail produk agar menampilkan informasi yang kita butuhkan (sama dengan product card, kecuali deskripsi produk yang ditampilkan sepenuhnya).
+
+## 2. Mengapa membuat model Dart untuk memproses data JSON?
+Model, berupa objek/kelas dalam struktur Dart, memiliki sekumpulan atribut dengan type tertentu (misalnya, objek Person dapat memiliki String name, int age, dan bool isStudent). Dengan melewatkan semua pengolahan JSON ke model, kita dapat **memvalidasi isi dari JSON tersebut terhadap field yang kita perlukan**. Hal ini berbeda dengan loading JSON tanpa model, yang menggunakan `Map<String, Dynamic>`. Dynamic pada Dart artinya tidak memiliki type yang pasti, sehingga jika kita memerlukan fungsi-fungsi khusus type tertentu (misalnya length untuk string, penjumlahan/pengurangan untuk angka), kita tidak akan tahu apakah fungsi-fungsi tersebut bisa digunakan sampai runtime. Dengan pengukuhan type dalam model, kita dapat mengetahuinya sebagai compile error, sehingga debugging menjadi lebih mudah.
+
+Terkait dengan typing, model juga membantu kita **memastikan null safety yang baik**, karena dengan type yang pasti datang juga keharusan mengelola null. Kita dapat memastikan terlebih dahulu apakah suatu atribut pada model dapat bernilai null atau tidak, kemudain membuat kode lainnya dengan mempertimbangkan hal itu. Type Dynamic tidak mengikuti aturan null safety dari type Dart lain karena tidak memiliki type yang pasti. Hal ini artinya kalaupun kita tidak ingin suatu field bernilai null, kita dapat memberikan nilai null tanpa peringatan atau compile error. Akhirnya hal ini dapat mengakibatkan runtime error ke depannya.
+
+Menggunakan model juga menerapkan praktik OOP yang baik, yaitu menulis kode yang dapat digunakan kembali dalam berbagai konteks. Seandainya kita tidak menggunakan model, kita haus menulis kode read dan write JSON di setiap halaman yang membutuhkannya. Ini artinya model membuat **maintainability lebih mudah**, karena ketika terjadi masalah pada kode atau perubahan pada backend, kita hanya harus memperhatikan satu titik, yaitu kode model itu saja.
+
+## 3. Apa perbedaan API `http` dan `CookieRequest`?
+API `http` dan `CookieRequest` keduanya berperan dalam mengakses data dari web app Django kita, tetapi memiliki fungsi yang berbeda. 
+
+`http` digunakan untuk memproses HTTP request dan response. Kedua hal ini dibutuhkan agar app Flutter dapat berkomunikasi dengan app Django karena "bahasa" utama yang digunakan dalam transfer data di web adalah HTTP. `http` digunakan secara *behind-the-scenes* di fungsi asinkronus untuk menerima response HTTP dan menerjemahkannya menjadi bentuk yang dapat dimengerti oleh kode Dart, seperti JSON.
+
+`CookieRequest` berfungsi untuk menyimpan dan mengolah data *cookie* yang ada pada app Django kita. API ini penting karena tanpa HTTP *cookie*, informasi state seperti login user tidak akan dapat berpindah bersama page. Oleh karena itu, kita menggunakan Provider untuk "membersamai" semua halaman pada app Flutter dengan CookieRequest.
+
+## 4. Mengapa CookieRequest perlu dibagikan ke semua elemen di Flutter?
+Seperti yang sudah dijelaskan pada bagian sebelumnya `CookieRequest` berfungsi untuk menyimpan data HTTP *cookie* dari aplikasi Django. Cookie diperlukan pada sistem HTTP untuk menyimpan state atau session yang berlaku dan perlu dilewatkan ke setiap webpage.
+
+Menggunakan Provider untuk membagikan CookieRequest ke semua widget Flutter meniru sifat cookie ini. Dengan adanya Provider, semua widget dapat membaca data cookie yang mungkin diperlukannya, seperti informasi login user. Jika tidak, mungkin saja proses autentikasi harus diulang di setiap halaman. Hal ini serupa dengan penggunaan widget Theme yang sudah kita buat di `main.dart`; widget ini dilewatkan melalui widget tree ke semua widget lainnya, sehingga semua widget dapat menggunakan informasi tema untuk mengatur warna, tampilan teks, dan tampilan lainnya.
+
+## 5. Mengapa kita perlu melakukan banyak konfigurasi konektivitas?
+Semua konfigurasi jaringan yang perlu kita lakukan untuk interfacing Django-Flutter, seperti mengatur `ALLOWED_HOSTS` di app Django, mengaktifkan CORS, menggunakan `@csrf_exempt`, dan mengatur Android Manifest untuk mengizinkan internet, terkait dengan satu masalah, yaitu *security*. Secara default, banyak framework termasuk Django dan Flutter mengimplementasikan beragam jenis proteksi terhadap serangan siber, seperti CORS (cross-origin resource sharing), XSS (cross-site scripting), CSRF (cross-site request forgery), dan sebagainya. Pengaturan yang kita lakukan berfungsi untuk memastikan bahwa aplikasi kita lulus pengecekan security (mengatur `ALLOWED_HOSTS` dan Android Manifest) atau mem-*whitelist* aplikasi kita agar dapat menghindari pengecekan tersebut (`@csrf_exempt`).
+
+## 6. Seperti apa mekanisme pengiriman data, mulai dari input hingga ditampilkan pada Flutter?
+Kita akan menggunakan data produk untuk menjelaskan prosedur ini:
+- Pengguna mendaftarkan data produk ke dalam formulir produk baru, di `productform_screen.dart`. Kode pada formulir juga bertugas untuk memvalidasi input yang diberikan.
+- Isi formulir diubah menjadi JSON, lalu dikirim ke *view* Django melalui POST.
+- Django menarik data dari JSON yang dikirim, lalu mendaftarkan model produk ke dalam *database* di *backend*.
+- Pengguna membuka list produk.
+- Flutter melakukan request GET melalui fungsi asinkronus ke app Django untuk mendapatkan daftar produk yang ada di *database*.
+- Dengan FutureBuilder, Flutter menampilkan masing-masing produk pada halaman list.
+
+## 7. Seperti apa mekanisme autentikasi?
+- Pengguna membuka aplikasi, halaman pertama yang muncul adalah halaman login.
+- Pengguna memasukkan informasi login ke dalam formulir.
+- Flutter menggunakan fungsi asinkronus untuk mengirim POST ke *view* Django yang menangani login. Isi request tersebut adalah username dan password yang diinput oleh pengguna.
+- Django mengecek informasi user dan mencocokannya dengan *database*. Hasil pengecekan dikembalikan ke Flutter, apakah identitas user valid atau tidak.
+- Apabila login berhasil, Flutter akan mem-push halaman utama ke Navigator dan menampilkannya ke user, beserta dengan mengaitkan cookie dari app Django ke request.
+- Apabila gagal, Flutter akan menampilkan pesan error pada halaman login.
+- Jika pengguna ingin mendaftar (register), akan ditampilkan halaman registrasi yang memiliki field username, password, dan konfirmasi password.
+- Kali ini, ketika view Django menerima POST berisi identitas registrasi, yang akan diperiksa adalah apakah kedua password sama dan apakah ada user dengan username yang sama di *database*. Hasil pengecekan ini akan dikembalikan ke Flutter.
+- Jika registrasi berhasil, user akan dibawa ke halaman login; jika gagal, pesan error akan ditampilkan.
+- Apabila user ingin logout, Flutter menjalankan fungsi asinkronus untuk memanggil logout dari Django. Jika logout berhasil, user akan dikembalikan ke halaman login.
