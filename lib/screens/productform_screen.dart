@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:tasaki_shop/widgets/drawer.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert';
+import 'package:provider/provider.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:tasaki_shop/screens/menu.dart';
 
 class ProductFormPage extends StatefulWidget {
   const ProductFormPage({super.key});
@@ -35,12 +39,17 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
+
     return Scaffold(
       appBar: AppBar(
         title: Center(
-          child: Text("Create New Product", style: GoogleFonts.inconsolata(fontWeight: FontWeight.bold)),
+          child: Text(
+            "Create New Product",
+            style: GoogleFonts.inconsolata(fontWeight: FontWeight.bold),
+          ),
         ),
-        backgroundColor: Color(0xff60a5fa),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
       ),
       drawer: AppDrawer(),
@@ -241,39 +250,43 @@ class _ProductFormPageState extends State<ProductFormPage> {
                         "Save Product",
                         style: TextStyle(color: Colors.white),
                       ),
-                      onPressed: () {
+                      onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          showDialog(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                title: const Text("Product saved!"),
-                                content: SingleChildScrollView(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text("Product Name: $_name", style: TextStyle(fontWeight: FontWeight.bold),),
-                                      Text("Price: \$$_price"),
-                                      Text("Stock: $_stock"),
-                                      Text("Category: $_category"),
-                                      Text("Description: $_description"),
-                                      Text("Thumbnail URL: ${_thumbnail.isEmpty ? "None" : _thumbnail}"),
-                                      Text(_isFeatured ? "Product is featured" : "Product is not featured", style: TextStyle(fontWeight: FontWeight.bold))
-                                    ],
+                          final response = await request.postJson(
+                            "http://localhost:8000/create-flutter/",
+                            jsonEncode({
+                              "name": _name,
+                              "stock": _stock,
+                              "price": _price,
+                              "description": _description,
+                              "thumbnail": _thumbnail,
+                              "category": _category,
+                              "is_featured": _isFeatured,
+                            }),
+                          );
+                          if (context.mounted) {
+                            if (response['status'] == 'success') {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Saved your product!"),
+                                ),
+                              );
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => MyHomePage(),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "Something went wrong, please try again.",
                                   ),
                                 ),
-                                actions: [
-                                  TextButton(
-                                    child: const Text("Continue"),
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                      _formKey.currentState!.reset();
-                                    },
-                                  ),
-                                ],
                               );
-                            },
-                          );
+                            }
+                          }
                         }
                       },
                     ),

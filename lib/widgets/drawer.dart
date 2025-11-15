@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tasaki_shop/screens/menu.dart';
 import 'package:tasaki_shop/screens/productform_screen.dart';
+import 'package:tasaki_shop/screens/product_list.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -12,7 +13,9 @@ class AppDrawer extends StatelessWidget {
       child: ListView(
         children: [
           DrawerHeader(
-            decoration: const BoxDecoration(color: Color(0xff60a5fa)),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+            ),
             child: Column(
               children: [
                 Text(
@@ -36,7 +39,7 @@ class AppDrawer extends StatelessWidget {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.shopping_bag_rounded),
+            leading: const Icon(Icons.home_filled),
             title: const Text("Main Page"),
             onTap: () {
               Navigator.pushReplacement(
@@ -52,6 +55,26 @@ class AppDrawer extends StatelessWidget {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => ProductFormPage()),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.shopping_bag_rounded),
+            title: const Text("Product List"),
+            onTap: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => ProductListPage()),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.person),
+            title: const Text("My Products"),
+            onTap: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => ProductListPage(showMyProducts: true,)),
               );
             },
           ),

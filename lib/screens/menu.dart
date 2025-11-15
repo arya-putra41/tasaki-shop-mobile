@@ -1,19 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:tasaki_shop/screens/product_list.dart';
 import 'package:tasaki_shop/widgets/drawer.dart';
 import 'package:tasaki_shop/screens/productform_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:tasaki_shop/screens/login.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
 class MyHomePage extends StatelessWidget {
   MyHomePage({super.key});
 
   final List<ItemHomepage> items = [
-    ItemHomepage("All Products", Icons.shopping_bag_rounded, Colors.lightBlue[300]),
+    ItemHomepage(
+      "All Products",
+      Icons.shopping_bag_rounded,
+      Colors.lightBlue[300],
+    ),
     ItemHomepage("My Products", Icons.person, Colors.lightGreen[300]),
     ItemHomepage("Create Product", Icons.add, Colors.red[600]),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
+
     // Scaffold menyediakan struktur dasar halaman dengan AppBar dan body.
     return Scaffold(
       // AppBar adalah bagian atas halaman yang menampilkan judul.
@@ -27,7 +37,7 @@ class MyHomePage extends StatelessWidget {
           ),
         ),
         // Warna latar belakang AppBar diambil dari skema warna tema aplikasi.
-        backgroundColor: Color(0xff60a5fa),
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       drawer: AppDrawer(),
       // Body halaman dengan padding di sekelilingnya.
@@ -44,28 +54,26 @@ class MyHomePage extends StatelessWidget {
             Center(
               child: Column(
                 // Menyusun teks dan grid item secara vertikal.
-
                 children: [
                   // Menampilkan teks sambutan dengan gaya tebal dan ukuran 18.
                   const Padding(
                     padding: EdgeInsets.only(top: 16.0),
                     child: Column(
-                      children: [Text(
-                        'Welcome to Tasaki Shop',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 32.0,
-                        ),
-                      ),
+                      children: [
                         Text(
-                            "Misaka City's Best Football Merchandise",
-                            style: TextStyle(
-                              fontSize: 24.0,
-                            )
-                        )]
-                    )
-
-
+                          'Welcome to Tasaki Shop',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 32.0,
+                          ),
+                        ),
+                        Text(
+                          "Misaka City's Best Football Merchandise",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 24.0),
+                        ),
+                      ],
+                    ),
                   ),
 
                   // Grid untuk menampilkan ItemCard dalam bentuk grid 3 kolom.
@@ -82,6 +90,48 @@ class MyHomePage extends StatelessWidget {
                     children: items.map((ItemHomepage item) {
                       return ItemCard(item);
                     }).toList(),
+                  ),
+
+                  SizedBox(height: 20),
+
+                  ElevatedButton(
+                    onPressed: () async {
+                      final response = await request.logout(
+                        "http://localhost:8000/auth/logout/",
+                      );
+                      String message = response["message"];
+                      if (context.mounted) {
+                        if (response['status']) {
+                          String uname = response["username"];
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("$message See you again, $uname."),
+                            ),
+                          );
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginPage(),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text(message)));
+                        }
+                      }
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        "Log Out",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -119,16 +169,20 @@ class ItemCard extends StatelessWidget {
       child: InkWell(
         // Aksi ketika kartu ditekan.
         onTap: () {
-          // Menampilkan pesan SnackBar saat kartu ditekan.
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-                SnackBar(content: Text("You have pressed ${item.name}!"))
-            );
           if (item.name == "Create Product") {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => ProductFormPage())
+              MaterialPageRoute(builder: (context) => ProductFormPage()),
+            );
+          } else if (item.name == "All Products") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ProductListPage(showMyProducts: false,)),
+            );
+          } else if (item.name == "My Products") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ProductListPage(showMyProducts: true,)),
             );
           }
         },
@@ -140,11 +194,7 @@ class ItemCard extends StatelessWidget {
               // Menyusun ikon dan teks di tengah kartu.
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  item.icon,
-                  color: Colors.white,
-                  size: 30.0,
-                ),
+                Icon(item.icon, color: Colors.white, size: 30.0),
                 const Padding(padding: EdgeInsets.all(3)),
                 Text(
                   item.name,
@@ -158,6 +208,4 @@ class ItemCard extends StatelessWidget {
       ),
     );
   }
-
 }
-
